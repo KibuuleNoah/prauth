@@ -1,0 +1,166 @@
+
+
+
+
+
+
+/* (#059669 or #1B7F62) */
+/* (#1E3A8A or #0F3D91) */
+:root {
+  --gold: #059669;
+  --gold-light: #ffde7d;
+
+  /* --gold: #c89b1c; */
+  --light-shadow: #f5e4b2;
+  --dark-shadow: #8a6a0a;
+  --primary: #fffffd
+}
+
+h1,h2,h3,h4, .text-gold{
+  color: var(--gold)
+}
+.gold-gradient {
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.search-bar {
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
+}
+.gold-btn {
+  background-color: var(--gold);
+  color: white;
+  transition: all 0.3s ease;
+}
+.gold-btn:hover {
+  background-color: #b9971e;
+}
+.gold-title {
+  display: grid;
+  grid-template-areas: 'overlap';
+  place-content: center;
+  text-transform: uppercase;
+}
+.gold-title > div {
+  background-clip: text;  
+  -webkit-background-clip: text;
+  color: #d3d3d3;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 900;
+  font-size: clamp(calc(1.8em * 0.8),calc(10.8vw * 0.8),calc(9rem * 0.8));
+  grid-area: overlap;
+  letter-spacing: 1px;
+  -webkit-text-stroke: 4px transparent;
+}
+
+.gold-title .bg {
+  background-image: repeating-linear-gradient(
+  105deg,
+  var(--gold) 0%, 
+  var(--dark-shadow) 5%,
+  var(--gold) 12%
+  );
+  color: transparent;
+  filter: drop-shadow(2px 5px 10px rgba(0, 0, 0, 0.15));
+  transform: scaleY(1.05);
+  transform-origin: top;
+}
+
+.gold-title .fg {
+  background-image: repeating-linear-gradient(
+  5deg,  
+  var(--gold) 0%, 
+  var(--light-shadow) 23%, 
+  var(--gold) 31%
+  );
+  color: #ffffff;
+  transform: scale(1);
+}
+
+/* Limit list height for demo (scrollable area) */
+.board-list {
+  max-height: 60vh;
+  overflow: auto;
+}
+/* Smooth reveal for info panels */
+.info-panel {
+  transition: transform .18s ease, opacity .18s ease;
+  transform-origin: top;
+}
+
+[data-level-tab] {
+  position: relative;
+  display: inline-block;
+  color: var(--gold);
+  overflow: hidden;
+  cursor: pointer;
+  transition: color 0.4s ease;
+}
+
+/* Water fill layer */
+[data-level-tab]::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: var(--gold);
+  z-index: -1;
+  transition: height 0.4s ease-in-out;
+}
+
+/* Active state → background rises like water */
+[data-level-tab].active-tab {
+  color: white;
+}
+
+[data-level-tab].active-tab::before {
+  height: 100%;
+}
+
+
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+  90deg,
+  rgba(229, 231, 235, 0.2) 25%,
+  rgba(229, 231, 235, 0.6) 50%,
+  rgba(229, 231, 235, 0.2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+  90deg,
+  rgba(55, 65, 81, 0.2) 25%,
+  rgba(55, 65, 81, 0.6) 50%,
+  rgba(55, 65, 81, 0.2) 75%
+  );
+}
+
+div .input-error label {
+  color: red !important;
+}
+
+div .input-error input {
+  border: 1px solid red !important;
+  color: red !important;
+  outline: none !important;
+}
+
+div .input-error p {
+  color: red !important;
+}
+
