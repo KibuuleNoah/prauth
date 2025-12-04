@@ -66,18 +66,25 @@ func (r AuthController) Signup(ctx *gin.Context) {
 
 func (r AuthController) Signin(ctx *gin.Context){
 	email := ctx.PostForm("email")
+	pwd := ctx.PostForm("password")
+
+	if !services.IsValidEmail(email){
+		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid User Email"))
+	}else if (!services.IsStrongPassword(pwd)){
+		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid Password"))
+		return
+	}
   
-	u := models.User{
-		Email: email,
-		Username: email,
+	u, err := gorm.G[models.User](r.Dbs.DB).Where("email = ?", email).First(r.Dbs.Ctx)
+	if err != nil{
+		log.Println(err)
 	}
 
-	// gorm.G[models.User](r.Dbs.DB).Where("email")
+	log.Println(u)
 
-	log.Println("***", u)
-
-	if u.ID == 0 || services.CheckPassword(u.Password, ctx.PostForm("password")){
-		ctx.JSON(http.StatusOK, "Invalid User Name or Password")
+	if u.ID == 0 || !services.CheckPassword(u.Password, pwd){
+		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid UserIdentifier or Password"))
+		return
 	}
 
 	ctx.JSON(http.StatusOK,"Signin")
