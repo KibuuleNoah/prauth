@@ -20,7 +20,7 @@ type AuthController struct {
 func (r AuthController) Auth(ctx *gin.Context){
 	
 	// session, _ := r.AppCtx.CookieStore.Get(ctx.Request, "prauth_session")
-	// session.Values["user_id"] = 303
+	// session.Values["user_id"] = http.StatusSeeOther
 	// session.Save(ctx.Request, ctx.Writer)
 	// fmt.Println(session.Values)
 	ctx.HTML(http.StatusOK, "auth.tmpl", gin.H{
@@ -41,13 +41,13 @@ func (r AuthController) Signup(ctx *gin.Context) {
 	pwd2 := ctx.PostForm("confirm-password")
 
 	if (!services.IsValidEmail(email)){
-		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-Invalid User Email"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?alert=" + url.QueryEscape("e-Invalid User Email"))
 		return
 	}else if (!services.IsStrongPassword(pwd1)){
-		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-Weak User Password"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?alert=" + url.QueryEscape("e-Weak User Password"))
 		return
 	}else if (pwd1 != pwd2){
-		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-User User Password Don't Match"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?alert=" + url.QueryEscape("e-User User Password Don't Match"))
 		return
 	}
 
@@ -60,7 +60,12 @@ func (r AuthController) Signup(ctx *gin.Context) {
 		log.Println("Error Creating User: ", err)
 	}
 
-	ctx.JSON(http.StatusOK,u)
+	// Store user session
+	session, _ := r.AppCtx.CookieStore.Get(ctx.Request, "prauth_session")
+	session.Values["user_id"] = u.ID
+	session.Save(ctx.Request, ctx.Writer)
+
+	ctx.Redirect(http.StatusSeeOther, "/")
 	
 }
 
@@ -69,9 +74,9 @@ func (r AuthController) Signin(ctx *gin.Context){
 	pwd := ctx.PostForm("password")
 
 	if !services.IsValidEmail(email){
-		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid User Email"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid User Email"))
 	}else if (!services.IsStrongPassword(pwd)){
-		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid Password"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid Password"))
 		return
 	}
   
@@ -83,11 +88,16 @@ func (r AuthController) Signin(ctx *gin.Context){
 	log.Println(u)
 
 	if u.ID == 0 || !services.CheckPassword(u.Password, pwd){
-		ctx.Redirect(303, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid UserIdentifier or Password"))
+		ctx.Redirect(http.StatusSeeOther, "/auth?authType=signin&alert=" + url.QueryEscape("e-Invalid UserIdentifier or Password"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK,"Signin")
+	// Store user session
+	session, _ := r.AppCtx.CookieStore.Get(ctx.Request, "prauth_session")
+	session.Values["user_id"] = u.ID
+	session.Save(ctx.Request, ctx.Writer)
+
+	ctx.Redirect(http.StatusSeeOther, "/")
 }
 
 func (r AuthController) Signout(ctx *gin.Context){
