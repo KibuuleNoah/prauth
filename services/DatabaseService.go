@@ -3,11 +3,11 @@ package services
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"gorm.io/gorm"
 )
 
 type DataBaseService struct{
-	Conn *pgx.Conn
+	DB *gorm.DB
 	Ctx context.Context
 }
 

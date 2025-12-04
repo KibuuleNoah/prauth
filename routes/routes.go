@@ -3,18 +3,30 @@ package routes
 import (
 	"embed"
 	"html/template"
+	// "log"
 	"prauth/controllers"
 	"prauth/database"
 	ent "prauth/entities"
 	"prauth/middleware"
 	"prauth/services"
+	// "time"
 
+	// ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	// "go.uber.org/zap"
 )
 
 func RunServer(templateFS *embed.FS, staticFS embed.FS, appCtx *ent.AppCtx) {
 	router := gin.Default()
 
+	// logger, err := zap.NewProduction()
+	// if err != nil{
+	// 	log.Fatal("Logger Error: ",err)
+	// }
+
+	// router.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+
+  // Logs 
 	router.SetFuncMap(services.TemplatesService{}.All())
 
 	// Load templates from embedded FS
@@ -24,11 +36,10 @@ func RunServer(templateFS *embed.FS, staticFS embed.FS, appCtx *ent.AppCtx) {
 	// Serve embedded static files
 	services.CustomServeStaticFS(router, staticFS)
 
-	conn, ctx := database.InitDB()
-	defer conn.Close(ctx)
+	db, ctx := database.InitDB()
 
 	//DATABASE SERVICE
-	dbservice := services.DataBaseService{Conn: conn, Ctx: ctx}
+	dbservice := services.DataBaseService{DB: db, Ctx: ctx}
 
 	mw := middleware.Middleware{AppCtx: appCtx}
 	// client routes

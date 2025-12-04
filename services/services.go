@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -65,10 +67,31 @@ func IsValidEmail(email string) bool {
 }
 
 
-func IsStrongPassword(password string) bool {
-    // One regex to check everything
-    regex := regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$`)
-    return regex.MatchString(password)
+func IsStrongPassword(plaintext string) bool {
+    var (
+        hasMinLen  = false
+        hasUpper   = false
+        hasLower   = false
+        hasNumber  = false
+        hasSpecial = false
+    )
+    s := []rune(plaintext)
+    if len(s) >= 7 {
+        hasMinLen = true
+    }
+    for _, char := range s {
+        switch {
+        case unicode.IsUpper(char):
+            hasUpper = true
+        case unicode.IsLower(char):
+            hasLower = true
+        case unicode.IsNumber(char):
+            hasNumber = true
+        case unicode.IsPunct(char) || unicode.IsSymbol(char):
+            hasSpecial = true
+        }
+    }
+    return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
 }
 
 // HashPassword hashes a plaintext password using bcrypt.
@@ -84,6 +107,15 @@ func HashPassword(password string) (string, error) {
 func CheckPassword(hashedPassword, plainPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 	return err == nil
+}
+
+func CreateAlert(alertStr string) (alert map[string]string) {
+	split := strings.Split(alertStr, "-")
+	if len(split) < 2{
+		return alert
+	}
+	alertTypes := map[string]string{"e":"error", "s": "success", "i": "info"}
+	return map[string]string{"type": alertTypes[split[0]], "text": split[1]}
 }
 
 func LoginUser(){}

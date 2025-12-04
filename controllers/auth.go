@@ -1,14 +1,15 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	ent "prauth/entities"
+	"prauth/models"
 	"prauth/services"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AuthController struct {
@@ -22,40 +23,40 @@ func (r AuthController) Auth(ctx *gin.Context){
 	// session.Values["user_id"] = 303
 	// session.Save(ctx.Request, ctx.Writer)
 	// fmt.Println(session.Values)
-	fmt.Println("***",ctx.Query("msg"))
 	ctx.HTML(http.StatusOK, "auth.tmpl", gin.H{
-		"Msg": "working",
+		"Alert": services.CreateAlert(ctx.Query("alert")),
 	})
 }
 
 func (r AuthController) Signup(ctx *gin.Context) {
 	var err error
-
-	u := ent.User{
-		Dbs: r.Dbs,
-		Email: ctx.PostForm("email"),
+	email := ctx.PostForm("email")
+  
+	u := models.User{
+		Email: email,
+		Username: email,
 	}
 
 	pwd1 := ctx.PostForm("password")
 	pwd2 := ctx.PostForm("confirm-password")
 
-	if (services.IsValidEmail(u.Email)){
-		ctx.Redirect(303, "/auth?msg=" + url.QueryEscape("e Invalid User Email"))
+	if (!services.IsValidEmail(email)){
+		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-Invalid User Email"))
 		return
-	}else if (services.IsStrongPassword(pwd1)){
-		ctx.Redirect(303, "/auth?msg=" + url.QueryEscape("e Weak User Password"))
+	}else if (!services.IsStrongPassword(pwd1)){
+		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-Weak User Password"))
 		return
 	}else if (pwd1 != pwd2){
-		ctx.Redirect(303, "/auth?msg=" + url.QueryEscape("e User User Password Don't Match"))
+		ctx.Redirect(303, "/auth?alert=" + url.QueryEscape("e-User User Password Don't Match"))
 		return
 	}
 
-	u.PwdHash, err = services.HashPassword(pwd1)
+	u.Password, err = services.HashPassword(pwd1)
 	if err != nil{
 		log.Println("Error Hashing New User Password: ",err)
 	}
 
-	if err := u.Create(); err != nil{
+	if err := gorm.G[models.User](r.Dbs.DB).Create(r.Dbs.Ctx, &u); err != nil{
 		log.Println("Error Creating User: ", err)
 	}
 
@@ -64,22 +65,22 @@ func (r AuthController) Signup(ctx *gin.Context) {
 }
 
 func (r AuthController) Signin(ctx *gin.Context){
-	u := ent.User{
-		Dbs: r.Dbs,
-		Email: ctx.PostForm("email"),
+	email := ctx.PostForm("email")
+  
+	u := models.User{
+		Email: email,
+		Username: email,
 	}
 
-	err := u.GetByEmail()
-	if err != nil{
-		log.Println("Error Getting User: ",err)
-	}
-	
+	// gorm.G[models.User](r.Dbs.DB).Where("email")
+
 	log.Println("***", u)
-	if u.ID == 0 || services.CheckPassword(u.PwdHash, ctx.PostForm("password")){
+
+	if u.ID == 0 || services.CheckPassword(u.Password, ctx.PostForm("password")){
 		ctx.JSON(http.StatusOK, "Invalid User Name or Password")
 	}
 
-	ctx.JSON(http.StatusOK,u)
+	ctx.JSON(http.StatusOK,"Signin")
 }
 
 func (r AuthController) Signout(ctx *gin.Context){

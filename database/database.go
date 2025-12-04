@@ -3,36 +3,30 @@ package database
 import (
 	"context"
 	"log"
-	"prauth/services"
+	"prauth/models"
+  "gorm.io/driver/mysql"
 
-	"github.com/jackc/pgx/v5"
+	"gorm.io/gorm"
 )
 
 
-func InitDB() (*pgx.Conn,context.Context) {
-	ctx := context.Background()
-
-	conn, err := pgx.Connect(ctx, services.GetDBURL())
+func InitDB() (*gorm.DB,context.Context) {
+	
+	dsn := "root:noahtri@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local"
+  db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Unable to connect:", err)
 	}
-
-	if err = createUserTable(conn, ctx); err != nil{
-		log.Fatal(err)
-	}
 	
-	return conn, ctx
+	ctx := context.Background()
+
+	db.AutoMigrate(dbModels()...)
+
+	return db, ctx
 }
 
-func createUserTable(conn *pgx.Conn, ctx context.Context) error {
-	_, err := conn.Exec(ctx, `
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			email TEXT UNIQUE NOT NULL,
-			pwdhash TEXT NOT NULL
-		)
-	`)
-	return err
+func dbModels() []any{
+	return []any{
+		&models.User{},
+	}
 }
-
